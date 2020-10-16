@@ -4,9 +4,11 @@ Manage Openresty Package Manager modules.
 """
 from __future__ import absolute_import, print_function, unicode_literals
 
+import os
 import logging
 
 # Import Salt libs
+import salt.utils.platform
 from salt.exceptions import CommandExecutionError
 
 log = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -23,6 +25,12 @@ def _opm(command, runas=None, env={}):
     Additional environment variables to run the opm with.
     """
     cmdline = ["opm"] + command
+
+    # use the current user's home as fallback if HOME is undefined
+    if ("HOME" not in env) and (not salt.utils.platform.is_windows()):
+        env["HOME"] = os.path.expanduser("~")
+        log.debug("HOME environment set to %s", env["HOME"])
+
     ret = __salt__["cmd.run_all"](cmdline, runas=runas, env=env, python_shell=False)
 
     if ret["retcode"] == 0:
