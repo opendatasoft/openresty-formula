@@ -44,7 +44,7 @@ def installed(name, user=None, version=None):
     packages = __salt__["opm.list"](runas=user)
 
     if name in packages and version is not None:
-        match = re.match(r"(>=|>|<|<=)", version)
+        match = re.match(r"(>=|>|<|<=|=)", version)
         if match:
             # Grab the comparison
             cmpr = match.group()
@@ -52,7 +52,9 @@ def installed(name, user=None, version=None):
             # Clear out comparison from version and whitespace
             desired_version = re.sub(cmpr, "", version).strip()
 
-            if salt.utils.versions.compare(packages[name], cmpr, desired_version):
+            if salt.utils.versions.compare(
+                    packages[name], "==" if cmpr == "=" else cmpr, desired_version
+            ):
                 ret["result"] = True
                 ret["comment"] = "Installed package meets version requirements."
                 return ret
